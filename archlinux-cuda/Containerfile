@@ -1,0 +1,47 @@
+FROM ghcr.io/archlinux/archlinux:latest
+ARG username
+
+RUN pacman-key --init && pacman-key --populate archlinux
+
+RUN pacman -Syu --noconfirm \
+    zsh \
+    grml-zsh-config \
+    vim \
+    less
+
+RUN pacman -Syu --noconfirm \
+    nvidia-open \
+    opencl-nvidia \
+    cuda
+
+RUN pacman -Syu --noconfirm \
+    git \
+    gcc \
+    make \
+    cmake
+
+RUN useradd --create-home --home-dir=/home/${username} --shell=/usr/bin/zsh ${username}
+USER 1000:1000
+
+RUN git clone --depth=1 https://github.com/NVIDIA/cuda-samples.git /home/${username}/cuda-samples
+
+RUN mkdir /home/${username}/cuda-samples/cpp/1_Utilities/deviceQuery/build
+WORKDIR /home/${username}/cuda-samples/cpp/1_Utilities/deviceQuery/build
+RUN source /etc/profile ; cmake ..
+RUN make -j$(nproc)
+RUN ln -s /home/${username}/cuda-samples/cpp/1_Utilities/deviceQuery/build/deviceQuery /home/${username}/deviceQuery
+
+RUN mkdir /home/${username}/cuda-samples/cpp/1_Utilities/deviceQueryDrv/build
+WORKDIR /home/${username}/cuda-samples/cpp/1_Utilities/deviceQueryDrv/build
+RUN source /etc/profile ; cmake ..
+RUN make -j$(nproc)
+RUN ln -s /home/${username}/cuda-samples/cpp/1_Utilities/deviceQueryDrv/build/deviceQueryDrv /home/${username}/deviceQueryDrv
+
+RUN mkdir /home/${username}/cuda-samples/cpp/1_Utilities/topologyQuery/build
+WORKDIR /home/${username}/cuda-samples/cpp/1_Utilities/topologyQuery/build
+RUN source /etc/profile ; cmake ..
+RUN make -j$(nproc)
+RUN ln -s /home/${username}/cuda-samples/cpp/1_Utilities/topologyQuery/build/topologyQuery /home/${username}/topologyQuery
+
+WORKDIR /home/${username}
+
