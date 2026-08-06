@@ -1,0 +1,32 @@
+FROM localhost/archlinux-cuda-llamacpp
+ARG username
+
+USER root
+RUN pacman -Syu --noconfirm opencode firefox
+USER 1000:1000
+
+RUN mkdir -p /home/${username}/.config/opencode/
+RUN cat > /home/${username}/.config/opencode/opencode.json << 'EOF'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "llama.cpp/llama.cpp",
+  "provider": {
+    "llama.cpp": {
+      "name": "llama.cpp",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "http://127.0.0.1:9931/v1"
+      },
+      "models": {
+        "llama.cpp": {
+          "name": "llama.cpp"
+        }
+      }
+    }
+  }
+}
+EOF
+
+USER 1000:1000
+WORKDIR /home/${username}
+
