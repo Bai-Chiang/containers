@@ -1,0 +1,24 @@
+FROM localhost/archlinux-cuda
+ARG username
+
+USER root
+RUN pacman -Syu --noconfirm uv
+USER 1000:1000
+
+WORKDIR /home/${username}
+RUN uv venv
+ENV PATH="$PATH:/home/${username}/.venv/bin"
+RUN uv pip install huggingface-hub
+
+USER root
+RUN pacman -Syu --noconfirm ccache
+USER 1000:1000
+
+RUN git clone --depth=1 https://github.com/ggml-org/llama.cpp.git /home/${username}/llama.cpp
+WORKDIR /home/${username}/llama.cpp
+RUN source /etc/profile ; cmake -B build -DGGML_NATIVE=ON -DGGML_CUDA=ON
+RUN source /etc/profile ; cmake --build build --config Release -j$(nproc)
+ENV PATH="$PATH:/home/${username}/llama.cpp/build/bin"
+
+WORKDIR /home/${username}
+
